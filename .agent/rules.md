@@ -1,0 +1,6 @@
+- Language: Java 21
+- Framework: Spring Boot 3.x
+- Storage: MySQL 8
+- Coding Standard: Clean Architecture (Controller -> Service -> Repository), DTO pattern, Lombok.
+- follow the standards mention in the .spec
+- add a proper comments to understand the code and  properties

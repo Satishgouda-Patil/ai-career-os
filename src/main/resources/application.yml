@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: ai-career-os
+  profiles:
+    active: dev
+
+server:
+  port: 8080
