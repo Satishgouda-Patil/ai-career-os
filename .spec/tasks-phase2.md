@@ -80,11 +80,11 @@ Based on `.spec/phase-2/` documentation.
 
 ### Milestone 4: Recruiter Intelligence
 
-- [ ] **Task 4.1: Create Company & Recruiter Schema Migration**
+- [x] **Task 4.1: Create Company & Recruiter Schema Migration**
   - **Description:** Create Flyway script `V6__create_recruiter_schema.sql` for `companies` and `recruiters` tables.
   - **Target Files:** `src/main/resources/db/migration/V6__create_recruiter_schema.sql`
 
-- [ ] **Task 4.2: Implement Recruiter Intelligence & Discovery Service**
+- [x] **Task 4.2: Implement Recruiter Intelligence & Discovery Service**
   - **Description:** Implement `Company` and `Recruiter` domain entities, repositories, and pluggable `RecruiterDiscoveryService` provider SPI.
   - **Target Files:** `src/main/java/com/ai/career/recruiter/service/RecruiterDiscoveryService.java`
 
