@@ -92,11 +92,11 @@ Based on `.spec/phase-2/` documentation.
 
 ### Milestone 5: Communication Intelligence (Cold Email & Messaging)
 
-- [ ] **Task 5.1: Create Email Draft Schema Migration**
+- [x] **Task 5.1: Create Email Draft Schema Migration**
   - **Description:** Create Flyway script `V7__create_email_schema.sql` for `email_drafts` table.
   - **Target Files:** `src/main/resources/db/migration/V7__create_email_schema.sql`
 
-- [ ] **Task 5.2: Implement Cold Email & Messaging Generator**
+- [x] **Task 5.2: Implement Cold Email & Messaging Generator**
   - **Description:** Generate personalized cold emails, follow-up emails, and LinkedIn connection messages.
   - **Target Files:** `src/main/java/com/ai/career/communication/service/EmailGeneratorService.java`
 
@@ -104,18 +104,18 @@ Based on `.spec/phase-2/` documentation.
 
 ### Milestone 6: AI Workspace & Unified REST APIs
 
-- [ ] **Task 6.1: Create AI Workspace Schema Migration**
+- [x] **Task 6.1: Create AI Workspace Schema Migration**
   - **Description:** Create Flyway script `V8__create_workspace_schema.sql` for `workspaces` table.
   - **Target Files:** `src/main/resources/db/migration/V8__create_workspace_schema.sql`
 
-- [ ] **Task 6.2: Implement Workspace Aggregator Service**
+- [x] **Task 6.2: Implement Workspace Aggregator Service**
   - **Description:** Aggregate job analysis, ATS resume, cover letter, recruiter info, cold email, and recommendation into a single workspace with approval/rejection state.
   - **Target Files:** `src/main/java/com/ai/career/workspace/service/WorkspaceService.java`
 
-- [ ] **Task 6.3: Implement REST Controllers Suite**
+- [x] **Task 6.3: Implement REST Controllers Suite**
   - **Description:** Expose standard Phase 2 REST APIs (`/api/v1/resume`, `/api/v1/jobs/analysis`, `/api/v1/cover-letter`, `/api/v1/recruiters`, `/api/v1/emails`, `/api/v1/workspace`) with response wrappers (`{ success, data, message, timestamp, requestId }`).
   - **Target Files:** `src/main/java/com/ai/career/web/controller/*.java`
 
-- [ ] **Task 6.4: OpenAPI 3.0 Documentation & Comprehensive Integration Tests**
+- [x] **Task 6.4: OpenAPI 3.0 Documentation & Comprehensive Integration Tests**
   - **Description:** Update OpenAPI Swagger spec and write integration tests for Phase 2 workflows.
   - **Target Files:** `src/test/java/com/ai/career/integration/phase2/*Test.java`

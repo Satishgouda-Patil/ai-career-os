@@ -98,18 +98,18 @@ public class JobAnalysisServiceImpl implements JobAnalysisService {
 
         JobAnalysis savedAnalysis = jobAnalysisRepository.save(analysis);
 
-        jobMissingSkillRepository.deleteAll(jobMissingSkillRepository.findByJobAnalysisId(savedAnalysis.getId()));
+        savedAnalysis.getMissingSkills().clear();
         if (result.getMissingSkills() != null) {
-            List<JobMissingSkill> missingSkills = result.getMissingSkills().stream()
-                .map(ms -> JobMissingSkill.builder()
-                    .jobAnalysis(savedAnalysis)
-                    .skillName(ms.getSkillName() != null ? ms.getSkillName() : "General")
-                    .priority(ms.getPriority() != null ? ms.getPriority() : "MEDIUM")
-                    .learningSuggestion(ms.getLearning_suggestion() != null ? ms.getLearning_suggestion() : "Review documentation.")
-                    .build())
-                .collect(Collectors.toList());
-            jobMissingSkillRepository.saveAll(missingSkills);
-            savedAnalysis.setMissingSkills(missingSkills);
+            for (JobAnalysisResult.AiMissingSkill ms : result.getMissingSkills()) {
+                savedAnalysis.getMissingSkills().add(
+                    JobMissingSkill.builder()
+                        .jobAnalysis(savedAnalysis)
+                        .skillName(ms.getSkillName() != null ? ms.getSkillName() : "General")
+                        .priority(ms.getPriority() != null ? ms.getPriority() : "MEDIUM")
+                        .learningSuggestion(ms.getLearning_suggestion() != null ? ms.getLearning_suggestion() : "Review documentation.")
+                        .build()
+                );
+            }
         }
 
         JobRecommendation recommendation = jobRecommendationRepository.findByJobAnalysisId(savedAnalysis.getId())

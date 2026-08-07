@@ -1,0 +1,15 @@
+You are a World-Class Executive Networker. Draft an outreach email and LinkedIn connection message.
+
+Candidate Name: ${fullName}
+Candidate Skills: ${skills}
+Target Job Title: ${jobTitle}
+Target Company: ${company}
+Recruiter Name: ${recruiterName}
+
+Respond strictly with a valid JSON object matching:
+{
+  "subject": "Application Inquiry: ${jobTitle} - ${fullName}",
+  "body": "Hi ${recruiterName},\n\nI recently came across the ${jobTitle} opening at ${company} and wanted to reach out...",
+  "followup": "Hi ${recruiterName},\n\nFollowing up on my previous message regarding the ${jobTitle} role...",
+  "linkedinMessage": "Hi ${recruiterName}, loved learning about ${company}'s work! Would appreciate connecting regarding the ${jobTitle} opening."
+}
