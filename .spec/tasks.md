@@ -166,14 +166,14 @@ Prior to task execution, a full scan of the local Windows environment was conduc
 
 ### Milestone 5: REST Controller Endpoints
 
-- [ ] **Task 5.1: Implement Auth Controllers (`/api/v1/auth`)**
+- [x] **Task 5.1: Implement Auth Controllers (`/api/v1/auth`)**
   - **Description:** Build `AuthController` with endpoints:
     - `POST /api/v1/auth/register`
     - `POST /api/v1/auth/login`
   - **Target Files:** `src/main/java/com/ai/career/auth/controller/AuthController.java`
   - **Acceptance Criteria:** Enpoints validate DTO annotations (`@NotBlank`, `@Email`), return standard HTTP status codes (201 Created, 200 OK, 400 Bad Request, 401 Unauthorized), and return JWT tokens.
 
-- [ ] **Task 5.2: Implement Career Profile Controllers (`/api/v1/profile`)**
+- [x] **Task 5.2: Implement Career Profile Controllers (`/api/v1/profile`)**
   - **Description:** Build `ProfileController` with endpoints:
     - `GET /api/v1/profile`
     - `PUT /api/v1/profile`
@@ -182,7 +182,7 @@ Prior to task execution, a full scan of the local Windows environment was conduc
   - **Target Files:** `src/main/java/com/ai/career/profile/controller/ProfileController.java`
   - **Acceptance Criteria:** Secured with JWT. User can view, update skills/profile data, list skills lookup, and upload resume files.
 
-- [ ] **Task 5.3: Implement Job & Match Controllers (`/api/v1/jobs`)**
+- [x] **Task 5.3: Implement Job & Match Controllers (`/api/v1/jobs`)**
   - **Description:** Build `JobController` with endpoints:
     - `GET /api/v1/jobs?minScore={score}`
     - `GET /api/v1/jobs/{id}`
@@ -190,19 +190,19 @@ Prior to task execution, a full scan of the local Windows environment was conduc
   - **Target Files:** `src/main/java/com/ai/career/job/controller/JobController.java`
   - **Acceptance Criteria:** User can query matched jobs filtered by `minScore`, view detailed description, and view match breakdown.
 
-- [ ] **Task 5.4: Implement Notification Test Controller (`/api/v1/notifications`)**
+- [x] **Task 5.4: Implement Notification Test Controller (`/api/v1/notifications`)**
   - **Description:** Build `NotificationController` with endpoint `POST /api/v1/notifications/test` for sending manual test Telegram alerts.
   - **Target Files:** `src/main/java/com/ai/career/notify/controller/NotificationController.java`
   - **Acceptance Criteria:** Admin/user can trigger test Telegram message and view log status.
 
-- [ ] **Task 5.5: Implement Global Exception Handler & Unified API Error DTO**
+- [x] **Task 5.5: Implement Global Exception Handler & Unified API Error DTO**
   - **Description:** Create `@RestControllerAdvice` handling `MethodArgumentNotValidException`, `BadCredentialsException`, `ResourceNotFoundException`, and generic exceptions, producing consistent `{ error: "...", code: "...", details: [] }` JSON responses.
   - **Target Files:**
     - `src/main/java/com/ai/career/common/exception/GlobalExceptionHandler.java`
     - `src/main/java/com/ai/career/common/dto/ApiErrorResponse.java`
   - **Acceptance Criteria:** All controllers return standardized error JSON schemas with proper HTTP status codes.
 
-- [ ] **Task 5.6: OpenAPI / Swagger Documentation & Verification Tests**
+- [x] **Task 5.6: OpenAPI / Swagger Documentation & Verification Tests**
   - **Description:** Add SpringDoc OpenAPI 3 dependency (`springdoc-openapi-starter-webmvc-ui`), annotate controllers with `@Operation`, and write end-to-end integration tests using `@SpringBootTest` and MockMvc / Testcontainers.
   - **Target Files:**
     - `src/main/java/com/ai/career/config/OpenApiConfig.java`
