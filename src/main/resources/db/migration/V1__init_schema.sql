@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS job_matches (
     matched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_jm_profile FOREIGN KEY (profile_id) REFERENCES profiles(user_id) ON DELETE CASCADE,
     CONSTRAINT fk_jm_job FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
-    CONSTRAINT uk_profile_job MATCH (profile_id, job_id)
+    CONSTRAINT uk_profile_job UNIQUE (profile_id, job_id)
 );
 
 CREATE TABLE IF NOT EXISTS notifications (
