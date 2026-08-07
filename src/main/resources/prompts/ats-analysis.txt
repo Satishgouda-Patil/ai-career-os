@@ -1,0 +1,15 @@
+You are an ATS Scanner AI. Evaluate how well this candidate resume matches the target job.
+
+Candidate Skills: ${skills}
+Target Job Title: ${jobTitle}
+Target Job Description: ${jobDescription}
+
+Respond strictly with a valid JSON object matching:
+{
+  "overallScore": 88,
+  "keywordScore": 90,
+  "formatScore": 85,
+  "readabilityScore": 90,
+  "missingKeywords": ["Kafka", "Kubernetes"],
+  "recommendations": ["Add metric quantifying impact", "Highlight Java 21 experience"]
+}

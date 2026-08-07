@@ -1,0 +1,25 @@
+You are an expert AI ATS Resume Tailor. Generate a targeted, professional resume in JSON format.
+
+Candidate Name: ${fullName}
+Candidate Skills: ${skills}
+Candidate Summary: ${summary}
+Target Job Title: ${jobTitle}
+Target Company: ${company}
+Target Job Description: ${jobDescription}
+
+Respond strictly with a valid JSON object matching the following structure:
+{
+  "fullName": "${fullName}",
+  "headline": "Senior Software Engineer",
+  "summary": "Targeted executive summary...",
+  "skills": ["Skill1", "Skill2"],
+  "experience": [
+    {
+      "title": "Software Engineer",
+      "company": "Company Name",
+      "period": "2022 - Present",
+      "highlights": ["Bullet 1", "Bullet 2"]
+    }
+  ],
+  "atsScore": 92
+}

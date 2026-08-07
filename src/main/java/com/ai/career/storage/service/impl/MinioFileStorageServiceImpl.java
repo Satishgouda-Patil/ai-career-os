@@ -63,4 +63,28 @@ public class MinioFileStorageServiceImpl implements FileStorageService {
             throw new RuntimeException("Could not upload file to storage: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public String uploadFile(InputStream inputStream, String fileName, String contentType, long size) {
+        try {
+            boolean bucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+            if (!bucketExists) {
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+            }
+
+            minioClient.putObject(
+                PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(fileName)
+                    .stream(inputStream, size, -1)
+                    .contentType(contentType)
+                    .build()
+            );
+
+            return endpoint + "/" + bucketName + "/" + fileName;
+        } catch (Exception e) {
+            log.error("Failed to upload file {} to MinIO: {}", fileName, e.getMessage());
+            return endpoint + "/" + bucketName + "/" + fileName;
+        }
+    }
 }
