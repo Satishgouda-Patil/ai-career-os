@@ -141,21 +141,21 @@ Prior to task execution, a full scan of the local Windows environment was conduc
 
 ### Milestone 4: Local LLM Integration (Ollama)
 
-- [ ] **Task 4.1: Implement Ollama HTTP Client Integration**
+- [x] **Task 4.1: Implement Ollama HTTP Client Integration**
   - **Description:** Create `OllamaClientService` using Spring `RestClient` to connect to local Ollama server (`http://localhost:11434/api/generate` or `/api/chat`).
   - **Target Files:**
     - `src/main/java/com/ai/career/config/OllamaConfig.java`
     - `src/main/java/com/ai/career/llm/client/OllamaClientService.java`
   - **Acceptance Criteria:** Client can send prompt payload to local Ollama instance and extract completion text response with connection timeout/retry rules.
 
-- [ ] **Task 4.2: Develop Match Scoring LLM Prompt & Service Fallback**
+- [x] **Task 4.2: Develop Match Scoring LLM Prompt & Service Fallback**
   - **Description:** Design prompt template for local LLM skill ranking and semantic match evaluation. Update `MatchScoringService` to use local LLM scoring with fallback to term frequency scoring if Ollama service is unavailable.
   - **Target Files:**
     - `src/main/java/com/ai/career/llm/prompt/PromptTemplates.java`
     - `src/main/java/com/ai/career/llm/service/LlmMatchEvaluator.java`
   - **Acceptance Criteria:** System uses local LLM matching when available, and seamlessly degrades to exact keyword match algorithm if Ollama server is offline.
 
-- [ ] **Task 4.3: Implement Resume Tailoring Stub Endpoint & Service Interface**
+- [x] **Task 4.3: Implement Resume Tailoring Stub Endpoint & Service Interface**
   - **Description:** Create `ResumeTailoringService` interface and Phase 1 stub implementation `OllamaResumeTailorStub`. Stub accepts `jobId`, reads user base profile, and generates tailored summary preview via local LLM prompt.
   - **Target Files:**
     - `src/main/java/com/ai/career/llm/service/ResumeTailoringService.java`

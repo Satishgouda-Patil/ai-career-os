@@ -30,6 +30,7 @@ public class MatchScoringServiceImpl implements MatchScoringService {
     private final JobRepository jobRepository;
     private final JobMatchRepository jobMatchRepository;
     private final RabbitTemplate rabbitTemplate;
+    private final com.ai.career.llm.service.LlmMatchEvaluator llmMatchEvaluator;
 
     @Value("${app.rabbitmq.exchange:job.exchange}")
     private String exchangeName;
@@ -68,6 +69,13 @@ public class MatchScoringServiceImpl implements MatchScoringService {
             return 0;
         }
 
+        // 1. Try local LLM evaluation
+        Integer llmScore = llmMatchEvaluator.evaluateMatchWithLlm(profileSkills.getSkillNames(), jobTitle, jobDescription);
+        if (llmScore != null) {
+            return llmScore;
+        }
+
+        // 2. Fallback to keyword matching
         String textToSearch = ((jobTitle != null ? jobTitle : "") + " " + (jobDescription != null ? jobDescription : "")).toLowerCase();
 
         long matchedCount = profileSkills.getSkillNames().stream()
