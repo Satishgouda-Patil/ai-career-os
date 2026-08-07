@@ -64,15 +64,15 @@ Based on `.spec/phase-2/` documentation.
 
 ### Milestone 3: Cover Letter Intelligence
 
-- [ ] **Task 3.1: Create Cover Letter Schema Migration**
+- [x] **Task 3.1: Create Cover Letter Schema Migration**
   - **Description:** Create Flyway script `V5__create_cover_letter_schema.sql` for `cover_letters` table.
   - **Target Files:** `src/main/resources/db/migration/V5__create_cover_letter_schema.sql`
 
-- [ ] **Task 3.2: Implement Cover Letter Entities & Repositories**
+- [x] **Task 3.2: Implement Cover Letter Entities & Repositories**
   - **Description:** Build `CoverLetter` JPA entity and repository.
   - **Target Files:** `src/main/java/com/ai/career/coverletter/domain/entity/CoverLetter.java`, `src/main/java/com/ai/career/coverletter/domain/repository/CoverLetterRepository.java`
 
-- [ ] **Task 3.3: Implement Personalized Cover Letter Generator**
+- [x] **Task 3.3: Implement Personalized Cover Letter Generator**
   - **Description:** Generate personalized, company-aware, role-aware, and tone-aware cover letters with version history.
   - **Target Files:** `src/main/java/com/ai/career/coverletter/service/CoverLetterService.java`
 
