@@ -40,23 +40,23 @@ Based on `.spec/phase-2/` documentation.
 
 ### Milestone 2: Deep Job Intelligence & Skill Gap Analysis
 
-- [ ] **Task 2.1: Create Job Analysis Schema Migration**
+- [x] **Task 2.1: Create Job Analysis Schema Migration**
   - **Description:** Create Flyway script `V4__create_job_analysis_schema.sql` for `job_analyses`, `job_missing_skills`, and `job_recommendations` tables.
   - **Target Files:** `src/main/resources/db/migration/V4__create_job_analysis_schema.sql`
 
-- [ ] **Task 2.2: Implement Job Analysis Entities & Repositories**
+- [x] **Task 2.2: Implement Job Analysis Entities & Repositories**
   - **Description:** Build `JobAnalysis`, `JobMissingSkill`, and `JobRecommendation` JPA entities and repositories.
   - **Target Files:** `src/main/java/com/ai/career/jobanalysis/domain/entity/*.java`, `src/main/java/com/ai/career/jobanalysis/domain/repository/*.java`
 
-- [ ] **Task 2.3: Implement AI Job Analyzer**
+- [x] **Task 2.3: Implement AI Job Analyzer**
   - **Description:** Extract structured job details (responsibilities, required skills, preferred skills, salary range, work model, seniority level) using AI Orchestrator.
   - **Target Files:** `src/main/java/com/ai/career/jobanalysis/service/JobAnalyzerService.java`
 
-- [ ] **Task 2.4: Implement Missing Skills & Priority Engine**
+- [x] **Task 2.4: Implement Missing Skills & Priority Engine**
   - **Description:** Compare user skills vs job requirements, generating prioritized missing skill gaps and learning suggestions.
   - **Target Files:** `src/main/java/com/ai/career/jobanalysis/service/MissingSkillsService.java`
 
-- [ ] **Task 2.5: Implement Application Recommendation Engine**
+- [x] **Task 2.5: Implement Application Recommendation Engine**
   - **Description:** Compute candidate recommendation (`APPLY`, `WAIT`, `SKIP`) with confidence score and structured rationale.
   - **Target Files:** `src/main/java/com/ai/career/jobanalysis/service/RecommendationEngine.java`
 

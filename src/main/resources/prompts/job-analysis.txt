@@ -1,0 +1,32 @@
+You are a Job Intelligence AI Specialist. Perform deep analysis of this job posting.
+
+Job Title: ${jobTitle}
+Company: ${company}
+Job Location: ${jobLocation}
+Job Description: ${jobDescription}
+
+Candidate Profile Summary: ${summary}
+Candidate Skills: ${skills}
+
+Respond strictly with a valid JSON object matching:
+{
+  "summary": "Executive summary of role and team culture...",
+  "responsibilities": ["Lead development of backend APIs", "Design scalable database schemas"],
+  "requiredSkills": ["Java", "Spring Boot", "MySQL"],
+  "preferredSkills": ["Kafka", "Docker", "AWS"],
+  "salaryRange": "$120,000 - $150,000",
+  "workModel": "REMOTE",
+  "seniorityLevel": "SENIOR",
+  "matchScore": 92,
+  "recommendationStatus": "APPLY",
+  "decision": "APPLY",
+  "confidence": 92,
+  "rationale": "Candidate possesses core Java & Spring Boot skills matching 90%+ requirements.",
+  "missingSkills": [
+    {
+      "skillName": "Kafka",
+      "priority": "HIGH",
+      "learning_suggestion": "Review Kafka producer/consumer API patterns."
+    }
+  ]
+}
