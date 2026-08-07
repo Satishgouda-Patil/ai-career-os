@@ -101,36 +101,36 @@ Prior to task execution, a full scan of the local Windows environment was conduc
 
 ### Milestone 3: Job Fetching & RabbitMQ Pipeline
 
-- [ ] **Task 3.1: Configure RabbitMQ Exchanges, Queues, and Bindings**
+- [x] **Task 3.1: Configure RabbitMQ Exchanges, Queues, and Bindings**
   - **Description:** Define RabbitMQ configuration with topic exchange `job.exchange`, queues (`job.fetch.queue`, `job.match.queue`, `notification.queue`), and routing keys (`job.fetched`, `profile.updated`, `match.found`).
   - **Target Files:** `src/main/java/com/ai/career/config/RabbitMQConfig.java`
   - **Acceptance Criteria:** RabbitMQ queues and exchanges are declared automatically on startup.
 
-- [ ] **Task 3.2: Implement Jooble Job Fetcher Connector**
+- [x] **Task 3.2: Implement Jooble Job Fetcher Connector**
   - **Description:** Create `JoobleJobFetcher` using Spring `RestClient`/`RestTemplate` to fetch jobs from Jooble REST API, mapping response items to standard `JobDto`.
   - **Target Files:**
     - `src/main/java/com/ai/career/job/connector/JoobleJobFetcher.java`
     - `src/main/java/com/ai/career/job/dto/JoobleResponseDto.java`
   - **Acceptance Criteria:** Connector successfully queries external API, parses response payload, and handles API downtime gracefully with retry/fallback.
 
-- [ ] **Task 3.3: Implement Job Ingestion & Deduplication Service**
+- [x] **Task 3.3: Implement Job Ingestion & Deduplication Service**
   - **Description:** Create `JobIngestionService` to process incoming fetched jobs, check unique constraint `(source, source_job_id)` or `(title, company, location)`, persist new jobs, and publish `JobsFetchedEvent` to RabbitMQ.
   - **Target Files:** `src/main/java/com/ai/career/job/service/JobIngestionService.java`
   - **Acceptance Criteria:** Duplicate postings are filtered out; only new jobs are saved to DB and triggered into message queue.
 
-- [ ] **Task 3.4: Implement Scheduled Ingestion Runner**
+- [x] **Task 3.4: Implement Scheduled Ingestion Runner**
   - **Description:** Add `@Scheduled` cron/periodic job execution to trigger job fetchers at configurable intervals.
   - **Target Files:** `src/main/java/com/ai/career/job/scheduler/JobFetchScheduler.java`
   - **Acceptance Criteria:** Scheduler automatically triggers job ingestion pipeline without manual intervention.
 
-- [ ] **Task 3.5: Implement RabbitMQ Match Listener & Match Scoring Service**
+- [x] **Task 3.5: Implement RabbitMQ Match Listener & Match Scoring Service**
   - **Description:** Implement `MatchScoringService` listening to `JobsFetchedEvent` and `ProfileUpdatedEvent`. Calculate keyword skill overlap score (0-100), persist to `job_matches` table, and publish `MatchFoundEvent` if score > threshold (e.g. 80).
   - **Target Files:**
     - `src/main/java/com/ai/career/match/listener/JobMatchEventListener.java`
     - `src/main/java/com/ai/career/match/service/MatchScoringService.java`
   - **Acceptance Criteria:** Processing event messages correctly computes match score, stores records in `job_matches`, and forwards high-match events.
 
-- [ ] **Task 3.6: Implement Telegram Notification Listener**
+- [x] **Task 3.6: Implement Telegram Notification Listener**
   - **Description:** Implement `NotificationService` listening to `MatchFoundEvent`, generating formatted Telegram alert markdown messages, calling Telegram Bot API via HTTP, and updating `notifications` log.
   - **Target Files:**
     - `src/main/java/com/ai/career/notify/listener/NotificationEventListener.java`

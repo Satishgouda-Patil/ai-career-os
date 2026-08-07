@@ -1,0 +1,21 @@
+package com.ai.career.match.event;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class MatchFoundEvent implements Serializable {
+    private Long matchId;
+    private Long userId;
+    private Long jobId;
+    private String jobTitle;
+    private String company;
+    private Integer score;
+}
