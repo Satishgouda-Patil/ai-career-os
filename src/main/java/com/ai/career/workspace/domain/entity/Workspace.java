@@ -28,6 +28,10 @@ public class Workspace {
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "application_id")
+    private com.ai.career.application.domain.entity.Application application;
+
     @Column(length = 50)
     private String status;
 
