@@ -1,21 +1,16 @@
 package com.ai.career.application.domain.entity;
 
 public enum ApplicationExecutionStatus {
-    READY,
+    PENDING,
     VALIDATING,
-    LOCKED,
-    PROVIDER_SELECTED,
-    SESSION_STARTED,
-    FORM_DISCOVERED,
-    FORM_MAPPED,
-    FORM_VALIDATED,
-    READY_TO_SUBMIT,
-    SUBMITTING,
-    VERIFYING,
-    SUBMITTED,
-    FAILED,
+    RUNNING,
     ACTION_REQUIRED,
-    BLOCKED,
+    SUCCEEDED,
+    FAILED,
     CANCELLED,
-    UNVERIFIED
+    UNKNOWN;
+
+    public boolean isTerminal() {
+        return this == SUCCEEDED || this == FAILED || this == CANCELLED;
+    }
 }

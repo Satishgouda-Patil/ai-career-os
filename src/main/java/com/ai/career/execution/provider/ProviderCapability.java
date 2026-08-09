@@ -1,0 +1,15 @@
+package com.ai.career.execution.provider;
+
+public enum ProviderCapability {
+    FORM_APPLICATION,
+    API_APPLICATION,
+    BROWSER_APPLICATION,
+    RESUME_UPLOAD,
+    COVER_LETTER_UPLOAD,
+    TEXT_FIELDS,
+    SELECT_FIELDS,
+    CHECKBOX_FIELDS,
+    FILE_FIELDS,
+    CUSTOM_QUESTIONS,
+    EXTERNAL_REDIRECT
+}

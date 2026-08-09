@@ -29,6 +29,22 @@ public class ApplicationExecution {
     @Column(nullable = false, length = 50)
     private ApplicationExecutionStatus status;
 
+    @Column(name = "outcome_status", length = 50)
+    private String outcomeStatus;
+
+    @Column(name = "external_application_id", length = 255)
+    private String externalApplicationId;
+
+    @Column(name = "external_url", length = 1024)
+    private String externalUrl;
+
+    @Column(name = "error_code", length = 100)
+    private String errorCode;
+
+    @Builder.Default
+    @Column(name = "retryable")
+    private boolean retryable = false;
+
     @Column(name = "execution_logs", columnDefinition = "TEXT")
     private String executionLogs;
 
