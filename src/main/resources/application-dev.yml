@@ -46,6 +46,11 @@ app:
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
     bucket-name: resumes
+  execution:
+    lock:
+      lease-seconds: 300
+      wait-millis: 0
+      retry-delay-millis: 100
 
 management:
   endpoints:

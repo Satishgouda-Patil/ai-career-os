@@ -6,7 +6,9 @@ import com.ai.career.application.dto.CreateApplicationRequest;
 import com.ai.career.application.dto.TransitionStateRequest;
 import com.ai.career.application.service.ApplicationService;
 import com.ai.career.auth.dto.RegisterRequest;
+import com.ai.career.domain.entity.User;
 import com.ai.career.domain.entity.Job;
+import com.ai.career.domain.repository.UserRepository;
 import com.ai.career.domain.repository.JobRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@org.springframework.context.annotation.Import(com.ai.career.config.TestRedisConfig.class)
 @Transactional
 public class ApplicationPersistenceIntegrationTest {
 
@@ -38,6 +41,9 @@ public class ApplicationPersistenceIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private JobRepository jobRepository;
@@ -93,9 +99,11 @@ public class ApplicationPersistenceIntegrationTest {
 
         Long applicationId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("data").get("id").asLong();
 
+        User user = userRepository.findByEmail("phase3.m1.candidate@example.com").orElseThrow();
+
         // 4. Verify Active Application Deduplication prevents duplicate active creation
         assertThrows(IllegalStateException.class, () -> {
-            applicationService.createApplication(1L, CreateApplicationRequest.builder().jobId(job.getId()).build());
+            applicationService.createApplication(user.getId(), CreateApplicationRequest.builder().jobId(job.getId()).build());
         });
 
         // 5. Transition Application State (DISCOVERED -> QUALIFIED -> PREPARING -> READY_FOR_REVIEW)

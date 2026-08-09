@@ -7,6 +7,8 @@ import com.ai.career.application.domain.repository.ApplicationStateHistoryReposi
 import com.ai.career.application.statemachine.ApplicationStateMachine;
 import com.ai.career.execution.dto.ExecuteApplicationRequest;
 import com.ai.career.execution.dto.ExecutionResponse;
+import com.ai.career.execution.lock.DistributedExecutionLock;
+import com.ai.career.execution.lock.ExecutionLockProperties;
 import com.ai.career.execution.provider.*;
 import com.ai.career.execution.registry.ApplicationExecutionProviderRegistry;
 import com.ai.career.execution.service.ApplicationExecutionService;
@@ -30,6 +32,8 @@ public class ApplicationExecutionServiceImpl implements ApplicationExecutionServ
     private final ApplicationStateHistoryRepository stateHistoryRepository;
     private final ApplicationExecutionProviderRegistry providerRegistry;
     private final ApplicationStateMachine stateMachine;
+    private final DistributedExecutionLock distributedExecutionLock;
+    private final ExecutionLockProperties lockProperties;
 
     @Override
     @Transactional
@@ -43,131 +47,143 @@ public class ApplicationExecutionServiceImpl implements ApplicationExecutionServ
             throw new IllegalArgumentException("Unauthorized access to application ID: " + applicationId);
         }
 
-        // Idempotency check: prevent duplicate active executions
-        List<ApplicationExecution> existingExecutions = executionRepository.findByApplicationIdOrderByCreatedAtDesc(applicationId);
-        boolean hasActiveExecution = existingExecutions.stream()
-            .anyMatch(exec -> exec.getStatus() == ApplicationExecutionStatus.PENDING ||
-                             exec.getStatus() == ApplicationExecutionStatus.VALIDATING ||
-                             exec.getStatus() == ApplicationExecutionStatus.RUNNING);
+        // 1. First Idempotency Check prior to lock acquisition
+        checkActiveExecution(applicationId);
 
-        if (hasActiveExecution) {
-            throw new IllegalStateException("An active execution is already running for Application ID: " + applicationId);
+        // 2. Acquire Distributed Execution Lock (Fail Closed Safety)
+        String lockKey = "application-execution:" + applicationId;
+        String ownerId = UUID.randomUUID().toString();
+        long leaseSeconds = lockProperties.getLeaseSeconds();
+
+        boolean locked = distributedExecutionLock.acquire(lockKey, ownerId, leaseSeconds);
+        if (!locked) {
+            log.warn("Execution lock acquisition FAILED for Application ID: {}, OwnerId: [{}]. Aborting execution.", applicationId, ownerId);
+            throw new IllegalStateException("LOCK_NOT_ACQUIRED: Execution lock is already held for Application ID: " + applicationId);
         }
 
-        // Transition application state to APPLYING if approved
-        ApplicationState currentState = application.getStatus();
-        if (currentState == ApplicationState.APPROVED) {
-            stateMachine.validateTransition(currentState, ApplicationState.APPLYING);
-            application.setStatus(ApplicationState.APPLYING);
-            if (application.getStartedAt() == null) {
-                application.setStartedAt(LocalDateTime.now());
+        try {
+            // 3. Mandatory Second Idempotency Check AFTER lock acquisition (Double-Check Safeguard)
+            checkActiveExecution(applicationId);
+
+            // Transition application state to APPLYING if approved
+            ApplicationState currentState = application.getStatus();
+            if (currentState == ApplicationState.APPROVED) {
+                stateMachine.validateTransition(currentState, ApplicationState.APPLYING);
+                application.setStatus(ApplicationState.APPLYING);
+                if (application.getStartedAt() == null) {
+                    application.setStartedAt(LocalDateTime.now());
+                }
+                applicationRepository.save(application);
+
+                stateHistoryRepository.save(ApplicationStateHistory.builder()
+                    .application(application)
+                    .fromStatus(currentState)
+                    .toStatus(ApplicationState.APPLYING)
+                    .reason("Execution initiated by user")
+                    .triggerType("USER")
+                    .actorType("USER")
+                    .actorId(userId)
+                    .build());
+            } else if (currentState != ApplicationState.APPLYING) {
+                throw new IllegalStateException("Application must be in APPROVED or APPLYING state before execution (Current: " + currentState + ")");
             }
-            applicationRepository.save(application);
 
-            stateHistoryRepository.save(ApplicationStateHistory.builder()
+            // Resolve Provider
+            ApplicationExecutionProvider provider = providerRegistry.resolve(application);
+            boolean dryRun = request != null && request.isDryRun();
+
+            ExecutionContext context = ExecutionContext.builder()
+                .applicationId(application.getId())
+                .userId(userId)
+                .jobId(application.getJob().getId())
+                .providerName(provider.getProviderName())
+                .jobUrl(application.getApplicationUrl())
+                .resumeUrl(application.getResumeVersion() != null ? application.getResumeVersion().getPdfUrl() : null)
+                .coverLetterContent(application.getCoverLetter() != null ? application.getCoverLetter().getContent() : null)
+                .applicationAnswers(request != null ? request.getAnswers() : null)
+                .automationLevel(application.getAutomationLevel())
+                .dryRun(dryRun)
+                .correlationId(UUID.randomUUID().toString())
+                .build();
+
+            // Create running ApplicationExecution record
+            ApplicationExecution execution = ApplicationExecution.builder()
                 .application(application)
-                .fromStatus(currentState)
-                .toStatus(ApplicationState.APPLYING)
-                .reason("Execution initiated by user")
-                .triggerType("USER")
-                .actorType("USER")
-                .actorId(userId)
-                .build());
-        } else if (currentState != ApplicationState.APPLYING) {
-            throw new IllegalStateException("Application must be in APPROVED or APPLYING state before execution (Current: " + currentState + ")");
-        }
+                .providerName(provider.getProviderName())
+                .status(ApplicationExecutionStatus.RUNNING)
+                .executionLogs("Execution session started with provider: " + provider.getProviderName())
+                .startedAt(LocalDateTime.now())
+                .build();
 
-        // Resolve Provider
-        ApplicationExecutionProvider provider = providerRegistry.resolve(application);
-        boolean dryRun = request != null && request.isDryRun();
+            execution = executionRepository.save(execution);
+            context.setExecutionId(execution.getId());
 
-        ExecutionContext context = ExecutionContext.builder()
-            .applicationId(application.getId())
-            .userId(userId)
-            .jobId(application.getJob().getId())
-            .providerName(provider.getProviderName())
-            .jobUrl(application.getApplicationUrl())
-            .resumeUrl(application.getResumeVersion() != null ? application.getResumeVersion().getPdfUrl() : null)
-            .coverLetterContent(application.getCoverLetter() != null ? application.getCoverLetter().getContent() : null)
-            .applicationAnswers(request != null ? request.getAnswers() : null)
-            .automationLevel(application.getAutomationLevel())
-            .dryRun(dryRun)
-            .correlationId(UUID.randomUUID().toString())
-            .build();
+            // Validate context prior to execution
+            ExecutionValidationResult validation = provider.validate(application, context);
+            if (!validation.isValid()) {
+                execution.setStatus(ApplicationExecutionStatus.FAILED);
+                execution.setOutcomeStatus(ExecutionOutcomeStatus.FAILED.name());
+                execution.setErrorMessage(validation.getErrorMessage());
+                execution.setCompletedAt(LocalDateTime.now());
+                executionRepository.save(execution);
 
-        // Create running ApplicationExecution record
-        ApplicationExecution execution = ApplicationExecution.builder()
-            .application(application)
-            .providerName(provider.getProviderName())
-            .status(ApplicationExecutionStatus.RUNNING)
-            .executionLogs("Execution session started with provider: " + provider.getProviderName())
-            .startedAt(LocalDateTime.now())
-            .build();
+                // Revert application state to ACTION_REQUIRED
+                transitionApplicationState(application, ApplicationState.APPLYING, ApplicationState.ACTION_REQUIRED, "Validation failed: " + validation.getErrorMessage(), userId);
 
-        execution = executionRepository.save(execution);
-        context.setExecutionId(execution.getId());
+                return mapExecutionToDto(execution, application.getStatus());
+            }
 
-        // Validate context prior to execution
-        ExecutionValidationResult validation = provider.validate(application, context);
-        if (!validation.isValid()) {
-            execution.setStatus(ApplicationExecutionStatus.FAILED);
-            execution.setOutcomeStatus(ExecutionOutcomeStatus.FAILED.name());
-            execution.setErrorMessage(validation.getErrorMessage());
+            // Invoke Provider Execution
+            ExecutionResult result = provider.execute(application, context);
             execution.setCompletedAt(LocalDateTime.now());
-            executionRepository.save(execution);
+            execution.setOutcomeStatus(result.getStatus().name());
+            execution.setExternalApplicationId(result.getExternalApplicationId());
+            execution.setExternalUrl(result.getExternalUrl());
+            execution.setErrorCode(result.getErrorCode());
+            execution.setErrorMessage(result.getErrorMessage());
+            execution.setRetryable(result.isRetryable());
+            execution.setExecutionLogs(execution.getExecutionLogs() + "\nProvider outcome: " + result.getStatus() + (result.getErrorMessage() != null ? " - " + result.getErrorMessage() : ""));
 
-            // Revert application state to ACTION_REQUIRED
-            transitionApplicationState(application, ApplicationState.APPLYING, ApplicationState.ACTION_REQUIRED, "Validation failed: " + validation.getErrorMessage(), userId);
+            // Determine ApplicationState transition based strictly on verified provider result
+            ApplicationState previousState = application.getStatus();
+            ApplicationState nextState;
+
+            switch (result.getStatus()) {
+                case SUCCESS:
+                    execution.setStatus(ApplicationExecutionStatus.SUCCEEDED);
+                    nextState = ApplicationState.APPLIED;
+                    if (result.getExternalApplicationId() != null) {
+                        application.setProviderApplicationId(result.getExternalApplicationId());
+                    }
+                    break;
+
+                case REQUIRES_HUMAN:
+                    execution.setStatus(ApplicationExecutionStatus.ACTION_REQUIRED);
+                    nextState = ApplicationState.ACTION_REQUIRED;
+                    break;
+
+                case FAILED:
+                case UNSUPPORTED:
+                    execution.setStatus(ApplicationExecutionStatus.FAILED);
+                    nextState = ApplicationState.FAILED;
+                    break;
+
+                case UNKNOWN:
+                default:
+                    execution.setStatus(ApplicationExecutionStatus.UNKNOWN);
+                    nextState = ApplicationState.SUBMISSION_REQUIRES_REVIEW; // Safety rule: UNKNOWN never automatically transitions to APPLIED
+                    break;
+            }
+
+            executionRepository.save(execution);
+            transitionApplicationState(application, previousState, nextState, "Provider execution outcome: " + result.getStatus(), userId);
 
             return mapExecutionToDto(execution, application.getStatus());
+
+        } finally {
+            // 4. Safe Release of Lock (Owner Identity Verified via Lua Script)
+            distributedExecutionLock.release(lockKey, ownerId);
         }
-
-        // Invoke Provider Execution
-        ExecutionResult result = provider.execute(application, context);
-        execution.setCompletedAt(LocalDateTime.now());
-        execution.setOutcomeStatus(result.getStatus().name());
-        execution.setExternalApplicationId(result.getExternalApplicationId());
-        execution.setExternalUrl(result.getExternalUrl());
-        execution.setErrorCode(result.getErrorCode());
-        execution.setErrorMessage(result.getErrorMessage());
-        execution.setRetryable(result.isRetryable());
-        execution.setExecutionLogs(execution.getExecutionLogs() + "\nProvider outcome: " + result.getStatus() + (result.getErrorMessage() != null ? " - " + result.getErrorMessage() : ""));
-
-        // Determine ApplicationState transition based strictly on verified provider result
-        ApplicationState previousState = application.getStatus();
-        ApplicationState nextState;
-
-        switch (result.getStatus()) {
-            case SUCCESS:
-                execution.setStatus(ApplicationExecutionStatus.SUCCEEDED);
-                nextState = ApplicationState.APPLIED;
-                if (result.getExternalApplicationId() != null) {
-                    application.setProviderApplicationId(result.getExternalApplicationId());
-                }
-                break;
-
-            case REQUIRES_HUMAN:
-                execution.setStatus(ApplicationExecutionStatus.ACTION_REQUIRED);
-                nextState = ApplicationState.ACTION_REQUIRED;
-                break;
-
-            case FAILED:
-            case UNSUPPORTED:
-                execution.setStatus(ApplicationExecutionStatus.FAILED);
-                nextState = ApplicationState.FAILED;
-                break;
-
-            case UNKNOWN:
-            default:
-                execution.setStatus(ApplicationExecutionStatus.UNKNOWN);
-                nextState = ApplicationState.SUBMISSION_REQUIRES_REVIEW; // Safety rule: UNKNOWN never automatically transitions to APPLIED
-                break;
-        }
-
-        executionRepository.save(execution);
-        transitionApplicationState(application, previousState, nextState, "Provider execution outcome: " + result.getStatus(), userId);
-
-        return mapExecutionToDto(execution, application.getStatus());
     }
 
     @Override
@@ -223,6 +239,18 @@ public class ApplicationExecutionServiceImpl implements ApplicationExecutionServ
         }
 
         return mapExecutionToDto(execution, application.getStatus());
+    }
+
+    private void checkActiveExecution(Long applicationId) {
+        List<ApplicationExecution> existingExecutions = executionRepository.findByApplicationIdOrderByCreatedAtDesc(applicationId);
+        boolean hasActiveExecution = existingExecutions.stream()
+            .anyMatch(exec -> exec.getStatus() == ApplicationExecutionStatus.PENDING ||
+                             exec.getStatus() == ApplicationExecutionStatus.VALIDATING ||
+                             exec.getStatus() == ApplicationExecutionStatus.RUNNING);
+
+        if (hasActiveExecution) {
+            throw new IllegalStateException("An active execution is already running for Application ID: " + applicationId);
+        }
     }
 
     private void transitionApplicationState(Application application, ApplicationState from, ApplicationState to, String reason, Long userId) {
