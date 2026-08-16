@@ -6,10 +6,11 @@ import {
   Mail,
   Clock,
   Video,
+  Activity,
   Settings,
 } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'jobs' | 'applications' | 'emails' | 'followups' | 'interviews' | 'settings';
+export type NavTab = 'dashboard' | 'jobs' | 'applications' | 'emails' | 'followups' | 'interviews' | 'control-center' | 'settings';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -51,6 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: upcomingInterviewsCount > 0 ? `${upcomingInterviewsCount}` : undefined,
       badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30'
     },
+    { id: 'control-center' as NavTab, label: 'Control Center', icon: Activity },
     { id: 'settings' as NavTab, label: 'Settings & Safety', icon: Settings },
   ];
 

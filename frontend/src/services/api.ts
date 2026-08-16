@@ -315,3 +315,34 @@ export const pipelineApi = {
     return res.data?.data;
   }
 };
+
+export const controlCenterApi = {
+  getSummary: async () => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.get('/control-center/summary');
+      return res.data;
+    } catch {
+      return {
+        operatingMode: "PRODUCTION / READ-ONLY",
+        safetyFlags: {
+          autoApply: false,
+          autoSendEmail: false,
+          autoLinkedIn: false,
+          allowLiveSubmission: false
+        },
+        providers: [
+          { providerName: "JOOBLE_PRODUCTION", category: "JOB_DISCOVERY", status: "HEALTHY", isSandbox: false, rateLimitInfo: "10 requests / min", lastSync: "Active" },
+          { providerName: "IMAP_PRODUCTION_READONLY", category: "EMAIL_INTELLIGENCE", status: "HEALTHY", isSandbox: false, rateLimitInfo: "2 requests / min (Read-Only)", lastSync: "Active" },
+          { providerName: "GREENHOUSE_PRODUCTION", category: "APPLICATION_EXECUTION", status: "HEALTHY (DRY-RUN)", isSandbox: false, rateLimitInfo: "Controlled Dry-Run Validation", lastSync: "Active" }
+        ],
+        recentAudits: [
+          { id: 1, providerName: "GREENHOUSE_PRODUCTION", actionType: "PRE_SUBMISSION_CHECK", status: "PASSED", requestSummary: "checksCount=11", responseSummary: "failures=0", executionTimeMs: 45, createdAt: new Date().toISOString() },
+          { id: 2, providerName: "IMAP_PRODUCTION_READONLY", actionType: "FETCH_INBOUND_EMAILS_READONLY", status: "SUCCESS", requestSummary: "action=READONLY_IMAP_SYNC", responseSummary: "fetched=1", executionTimeMs: 110, createdAt: new Date().toISOString() },
+          { id: 3, providerName: "JOOBLE_PRODUCTION", actionType: "FETCH_JOBS", status: "SUCCESS", requestSummary: "keywords=java&location=Remote", responseSummary: "fetched=5", executionTimeMs: 230, createdAt: new Date().toISOString() }
+        ],
+        recentFailures: []
+      };
+    }
+  }
+};

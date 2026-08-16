@@ -9,6 +9,7 @@ import { ApplicationsPage } from './pages/ApplicationsPage';
 import { EmailIntelligencePage } from './pages/EmailIntelligencePage';
 import { FollowUpsPage } from './pages/FollowUpsPage';
 import { InterviewsPage } from './pages/InterviewsPage';
+import { ControlCenterPage } from './pages/ControlCenterPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 import {
@@ -78,6 +79,7 @@ export function App() {
           {activeTab === 'emails' && <EmailIntelligencePage emails={emails} onRefresh={loadAllData} />}
           {activeTab === 'followups' && <FollowUpsPage followUps={followUps} onRefresh={loadAllData} />}
           {activeTab === 'interviews' && <InterviewsPage interviews={interviews} onRefresh={loadAllData} />}
+          {activeTab === 'control-center' && <ControlCenterPage />}
           {activeTab === 'settings' && <SettingsPage userEmail={userEmail} />}
         </main>
       </div>
