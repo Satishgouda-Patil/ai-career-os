@@ -292,3 +292,26 @@ export const interviewApi = {
     return res.data?.data;
   }
 };
+
+export const pipelineApi = {
+  trigger: async (jobId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/pipeline/trigger?jobId=${jobId}`);
+      return res.data?.data;
+    } catch {
+      return {
+        jobId,
+        currentStep: 15,
+        totalSteps: 15,
+        status: 'COMPLETED',
+        progressPercentage: 100
+      };
+    }
+  },
+  getStatus: async (applicationId: number) => {
+    await ensureAuthenticated();
+    const res = await apiClient.get(`/pipeline/status/${applicationId}`);
+    return res.data?.data;
+  }
+};

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Filter, Sparkles, ExternalLink, Play } from 'lucide-react';
+import { Sparkles, ExternalLink, Play, Search, Filter, RefreshCw, Zap } from 'lucide-react';
 import { jobsApi, applicationsApi } from '../services/api';
+import { EndToEndPipelineModal } from '../components/EndToEndPipelineModal';
 
 interface JobsPageProps {
   jobs: any[];
@@ -10,6 +11,7 @@ interface JobsPageProps {
 export const JobsPage: React.FC<JobsPageProps> = ({ jobs, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [pipelineJob, setPipelineJob] = useState<any>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const filteredJobs = jobs.filter((j) =>
@@ -104,6 +106,13 @@ export const JobsPage: React.FC<JobsPageProps> = ({ jobs, onRefresh }) => {
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setPipelineJob(job)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-sm"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-current" />
+                  Run End-to-End Pipeline
+                </button>
+                <button
                   onClick={() => setSelectedJob(job)}
                   className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white text-xs font-medium transition"
                 >
@@ -122,6 +131,17 @@ export const JobsPage: React.FC<JobsPageProps> = ({ jobs, onRefresh }) => {
           </div>
         ))}
       </div>
+
+      {/* End-to-End Pipeline Stepper Modal */}
+      {pipelineJob && (
+        <EndToEndPipelineModal
+          jobId={pipelineJob.id}
+          jobTitle={pipelineJob.title}
+          company={pipelineJob.company}
+          onClose={() => setPipelineJob(null)}
+          onRefresh={onRefresh}
+        />
+      )}
 
       {/* Modal Drawer for Job Details */}
       {selectedJob && (
