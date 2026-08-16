@@ -51,6 +51,11 @@ app:
       lease-seconds: 300
       wait-millis: 0
       retry-delay-millis: 100
+  safety:
+    auto-apply: false
+    auto-send-email: false
+    auto-linkedin: false
+    allow-live-submission: false
 
 management:
   endpoints:
