@@ -6,6 +6,7 @@ public enum ApplicationState {
     PREPARING,
     READY_FOR_REVIEW,
     APPROVED,
+    CONFIRMED_SUBMISSION,
     APPLYING,
     SUBMISSION_REQUIRES_REVIEW,
     APPLIED,
