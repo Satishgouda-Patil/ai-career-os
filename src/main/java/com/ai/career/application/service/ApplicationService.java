@@ -6,12 +6,15 @@ import com.ai.career.application.dto.ApplicationResponse;
 import com.ai.career.application.dto.CreateApplicationRequest;
 import com.ai.career.application.dto.TransitionStateRequest;
 
+import com.ai.career.application.dto.ApplicationWorkspaceDto;
+
 import java.util.List;
 
 public interface ApplicationService {
     ApplicationResponse createApplication(Long userId, CreateApplicationRequest request);
     ApplicationResponse transitionState(Long userId, Long applicationId, TransitionStateRequest request);
     ApplicationResponse getApplicationById(Long userId, Long applicationId);
+    ApplicationWorkspaceDto getApplicationWorkspace(Long userId, Long applicationId);
     List<ApplicationResponse> getUserApplications(Long userId, ApplicationState status);
     List<ApplicationHistoryResponse> getApplicationHistory(Long userId, Long applicationId);
 }

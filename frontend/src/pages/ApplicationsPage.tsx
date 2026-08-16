@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Layers, CheckCircle2, Play, AlertCircle, Clock } from 'lucide-react';
 import { applicationsApi } from '../services/api';
+import { UnifiedApplicationWorkspaceModal } from '../components/UnifiedApplicationWorkspaceModal';
 
 interface ApplicationsPageProps {
   applications: any[];
@@ -125,74 +126,13 @@ export const ApplicationsPage: React.FC<ApplicationsPageProps> = ({ applications
         )}
       </div>
 
-      {/* Application Workspace Drawer */}
+      {/* Unified Application Workspace Modal */}
       {selectedApp && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl p-6 space-y-5 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h3 className="text-xl font-bold text-white">{selectedApp.jobTitle || selectedApp.title}</h3>
-                  {getStatusBadge(selectedApp.status)}
-                </div>
-                <div className="text-sm text-sky-400 font-semibold mt-1">{selectedApp.company}</div>
-              </div>
-              <button
-                onClick={() => setSelectedApp(null)}
-                className="text-slate-400 hover:text-white font-bold text-lg"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Application Artifacts & Readiness */}
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-1">
-                <div className="font-semibold text-slate-300">Tailored Resume</div>
-                <div className="text-slate-400">Generated PDF resume grounded in candidate profile and job keywords.</div>
-              </div>
-              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-1">
-                <div className="font-semibold text-slate-300">Personalized Cover Letter</div>
-                <div className="text-slate-400">Tailored 3-paragraph cover letter addressing hiring team.</div>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-800 space-y-2 text-xs">
-              <div className="font-semibold text-white flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-sky-400" />
-                Human Review & Safety Policy
-              </div>
-              <p className="text-slate-300">
-                AI Career OS operates under safety locks. Automatic execution requires explicit candidate approval. Review form plan and facts before executing.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-              {(selectedApp.status === 'READY_FOR_REVIEW' || selectedApp.status === 'SUBMISSION_REQUIRES_REVIEW') && (
-                <button
-                  onClick={() => {
-                    handleApproveAndPrepare(selectedApp.id);
-                    setSelectedApp(null);
-                  }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded-xl"
-                >
-                  Approve Application
-                </button>
-              )}
-              {selectedApp.status === 'APPROVED' && (
-                <button
-                  onClick={() => {
-                    handleExecuteApplication(selectedApp.id);
-                    setSelectedApp(null);
-                  }}
-                  className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium rounded-xl"
-                >
-                  Execute Application Submission
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <UnifiedApplicationWorkspaceModal
+          applicationId={selectedApp.id}
+          onClose={() => setSelectedApp(null)}
+          onRefresh={onRefresh}
+        />
       )}
     </div>
   );

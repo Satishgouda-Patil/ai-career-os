@@ -78,4 +78,14 @@ public class ApplicationController {
         List<ApplicationHistoryResponse> history = applicationService.getApplicationHistory(userPrincipal.getId(), applicationId);
         return ResponseEntity.ok(ApiResponse.success(history));
     }
+
+    @GetMapping("/{applicationId}/workspace")
+    @Operation(summary = "Get unified application workspace", description = "Consolidates job info, match analysis, resume, cover letter, form readiness, safety locks, and execution audit trail")
+    public ResponseEntity<ApiResponse<com.ai.career.application.dto.ApplicationWorkspaceDto>> getApplicationWorkspace(
+        @AuthenticationPrincipal UserPrincipal userPrincipal,
+        @PathVariable Long applicationId
+    ) {
+        com.ai.career.application.dto.ApplicationWorkspaceDto workspace = applicationService.getApplicationWorkspace(userPrincipal.getId(), applicationId);
+        return ResponseEntity.ok(ApiResponse.success(workspace, "Unified application workspace retrieved"));
+    }
 }

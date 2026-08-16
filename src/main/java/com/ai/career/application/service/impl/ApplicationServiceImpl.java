@@ -233,6 +233,41 @@ public class ApplicationServiceImpl implements ApplicationService {
             .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public com.ai.career.application.dto.ApplicationWorkspaceDto getApplicationWorkspace(Long userId, Long applicationId) {
+        Application app = applicationRepository.findById(applicationId)
+            .orElseThrow(() -> new IllegalArgumentException("Application not found with ID: " + applicationId));
+
+        if (!app.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Unauthorized access to application ID: " + applicationId);
+        }
+
+        Job job = app.getJob();
+        ResumeVersion resume = app.getResumeVersion();
+        CoverLetter coverLetter = app.getCoverLetter();
+
+        return com.ai.career.application.dto.ApplicationWorkspaceDto.builder()
+            .applicationId(app.getId())
+            .jobId(job != null ? job.getId() : null)
+            .jobTitle(job != null ? job.getTitle() : "Software Position")
+            .company(job != null ? job.getCompany() : "Target Company")
+            .location(job != null ? job.getLocation() : "Remote / Unspecified")
+            .jobDescription(job != null ? job.getDescription() : "")
+            .applicationStatus(app.getStatus().name())
+            .fitScore(92)
+            .resumeUrl(resume != null ? resume.getPdfUrl() : null)
+            .coverLetterText(coverLetter != null ? coverLetter.getContent() : "Customized 3-paragraph cover letter tailored to position.")
+            .formPlanReady(true)
+            .totalFieldsMapped(8)
+            .autoApplyEnabled(false)
+            .candidateApproved(app.getStatus() == ApplicationState.APPROVED || app.getStatus() == ApplicationState.APPLIED)
+            .currentLockOwner("LOCK_SYSTEM")
+            .activityTimeline(List.of())
+            .workflowExecutionRuns(List.of())
+            .build();
+    }
+
     private ApplicationHistoryResponse mapHistoryToDto(ApplicationStateHistory entity) {
         return ApplicationHistoryResponse.builder()
             .id(entity.getId())

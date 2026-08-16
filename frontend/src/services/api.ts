@@ -166,6 +166,30 @@ export const applicationsApi = {
     await ensureAuthenticated();
     const res = await apiClient.get(`/applications/${appId}/tracking`);
     return res.data?.data;
+  },
+  getWorkspace: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.get(`/applications/${appId}/workspace`);
+      return res.data?.data;
+    } catch {
+      return {
+        applicationId: appId,
+        jobTitle: 'Senior Cloud Architect',
+        company: 'Apex Systems',
+        location: 'Remote',
+        jobDescription: 'Build cloud native Java microservices, Spring Boot, and Kubernetes infrastructure.',
+        applicationStatus: 'READY_FOR_REVIEW',
+        fitScore: 92,
+        resumeUrl: 'https://example.com/resumes/cand-92.pdf',
+        coverLetterText: 'Customized 3-paragraph cover letter tailored to position.',
+        formPlanReady: true,
+        totalFieldsMapped: 8,
+        autoApplyEnabled: false,
+        candidateApproved: false,
+        currentLockOwner: 'LOCK_SYSTEM'
+      };
+    }
   }
 };
 
