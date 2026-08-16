@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = '/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -17,6 +17,45 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// Auto authentication helper
+export const ensureAuthenticated = async (): Promise<string | null> => {
+  let token = localStorage.getItem('token');
+  if (token) return token;
+
+  // Attempt auto-login with default demo user
+  const demoEmail = 'candidate@ai-career.os';
+  const demoPassword = 'Password123!';
+
+  try {
+    const res = await axios.post(`${API_BASE_URL}/auth/login`, {
+      email: demoEmail,
+      password: demoPassword,
+    });
+    if (res.data?.token) {
+      token = res.data.token;
+      localStorage.setItem('token', token!);
+      return token;
+    }
+  } catch (err) {
+    // If demo user does not exist, auto-register demo user
+    try {
+      const regRes = await axios.post(`${API_BASE_URL}/auth/register`, {
+        email: demoEmail,
+        password: demoPassword,
+        fullName: 'Demo Candidate'
+      });
+      if (regRes.data?.token) {
+        token = regRes.data.token;
+        localStorage.setItem('token', token!);
+        return token;
+      }
+    } catch (e) {
+      console.error('Auto authentication error:', e);
+    }
+  }
+  return null;
+};
+
 // API Helper Services
 export const authApi = {
   login: async (email: string, passwordHash: string) => {
@@ -27,7 +66,7 @@ export const authApi = {
     return res.data;
   },
   register: async (email: string, passwordHash: string) => {
-    const res = await apiClient.post('/auth/register', { email, password: passwordHash });
+    const res = await apiClient.post('/auth/register', { email, password: passwordHash, fullName: 'Candidate User' });
     if (res.data?.token) {
       localStorage.setItem('token', res.data.token);
     }
@@ -37,6 +76,7 @@ export const authApi = {
 
 export const dashboardApi = {
   getSummary: async () => {
+    await ensureAuthenticated();
     try {
       const res = await apiClient.get('/dashboard/summary');
       return res.data?.data;
@@ -66,6 +106,7 @@ export const dashboardApi = {
 
 export const jobsApi = {
   getJobs: async () => {
+    await ensureAuthenticated();
     try {
       const res = await apiClient.get('/jobs');
       return res.data?.data || [];
@@ -78,6 +119,7 @@ export const jobsApi = {
     }
   },
   triggerFetch: async () => {
+    await ensureAuthenticated();
     const res = await apiClient.post('/jobs/fetch');
     return res.data;
   }
@@ -85,6 +127,7 @@ export const jobsApi = {
 
 export const applicationsApi = {
   getApplications: async () => {
+    await ensureAuthenticated();
     try {
       const res = await apiClient.get('/applications');
       return res.data?.data || [];
@@ -97,18 +140,22 @@ export const applicationsApi = {
     }
   },
   createApplication: async (jobId: number) => {
+    await ensureAuthenticated();
     const res = await apiClient.post('/applications', { jobId });
     return res.data?.data;
   },
   approveAndPrepare: async (appId: number) => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/applications/${appId}/approve-and-prepare`);
     return res.data?.data;
   },
   executeApplication: async (appId: number) => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/applications/${appId}/execute`, { browserType: 'CHROMIUM', headless: true });
     return res.data?.data;
   },
   getTracking: async (appId: number) => {
+    await ensureAuthenticated();
     const res = await apiClient.get(`/applications/${appId}/tracking`);
     return res.data?.data;
   }
@@ -116,6 +163,7 @@ export const applicationsApi = {
 
 export const emailApi = {
   getEmails: async () => {
+    await ensureAuthenticated();
     try {
       const res = await apiClient.get('/email-intelligence');
       return res.data?.data || [];
@@ -127,6 +175,7 @@ export const emailApi = {
     }
   },
   simulateEmail: async (data: { sender: string; subject: string; bodySnippet: string; externalThreadId?: string }) => {
+    await ensureAuthenticated();
     const res = await apiClient.post('/email-intelligence/simulate', data);
     return res.data?.data;
   }
@@ -134,6 +183,7 @@ export const emailApi = {
 
 export const followUpApi = {
   getFollowUps: async () => {
+    await ensureAuthenticated();
     try {
       const res = await apiClient.get('/follow-ups');
       return res.data?.data || [];
@@ -144,18 +194,22 @@ export const followUpApi = {
     }
   },
   generateDraft: async (appId: number, sequenceNumber = 1, customNotes?: string) => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/applications/${appId}/follow-ups/generate`, { sequenceNumber, customNotes });
     return res.data?.data;
   },
   approve: async (id: number) => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/follow-ups/${id}/approve`);
     return res.data?.data;
   },
   send: async (id: number) => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/follow-ups/${id}/send`);
     return res.data?.data;
   },
   cancel: async (id: number, reason?: string) => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/follow-ups/${id}/cancel`, { reason });
     return res.data?.data;
   }
@@ -163,6 +217,7 @@ export const followUpApi = {
 
 export const interviewApi = {
   getInterviews: async () => {
+    await ensureAuthenticated();
     try {
       const res = await apiClient.get('/interviews');
       return res.data?.data || [];
@@ -173,18 +228,22 @@ export const interviewApi = {
     }
   },
   getPrep: async (interviewId: number) => {
+    await ensureAuthenticated();
     const res = await apiClient.get(`/interviews/${interviewId}/prep`);
     return res.data?.data;
   },
   generatePrep: async (interviewId: number) => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/interviews/${interviewId}/prep/generate`);
     return res.data?.data;
   },
   getMockQuestion: async (interviewId: number, category = 'TECHNICAL') => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/interviews/${interviewId}/mock/question`, { category });
     return res.data?.data;
   },
   evaluateMockAnswer: async (interviewId: number, mockSessionId: number, candidateAnswer: string) => {
+    await ensureAuthenticated();
     const res = await apiClient.post(`/interviews/${interviewId}/mock/evaluate`, { mockSessionId, candidateAnswer });
     return res.data?.data;
   }
