@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Labels Resolution Test</title>
+</head>
+<body>
+    <form id="labels-form">
+        <!-- Explicit label -->
+        <label for="explicitField">Explicit Label Text</label>
+        <input type="text" id="explicitField" name="explicitField">
+
+        <!-- Wrapping label -->
+        <label>Wrapping Label Text <input type="text" id="wrappingField" name="wrappingField"></label>
+
+        <!-- Aria label -->
+        <input type="text" id="ariaLabelField" aria-label="Aria Label Text">
+
+        <!-- Aria labelledby -->
+        <div id="externalLabel">External Label Text</div>
+        <input type="text" id="ariaLabelledByField" aria-labelledby="externalLabel">
+
+        <!-- Placeholder fallback -->
+        <input type="text" id="placeholderField" placeholder="Placeholder Text">
+
+        <!-- Name/Id fallback -->
+        <input type="text" name="nameFallbackField">
+    </form>
+</body>
+</html>

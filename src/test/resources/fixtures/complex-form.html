@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Complex Application Form</title>
+</head>
+<body>
+    <form id="complex-form" action="/apply" method="POST">
+        <label for="coverLetter">Cover Letter</label>
+        <textarea id="coverLetter" name="coverLetter" placeholder="Write your letter here..."></textarea>
+
+        <label for="workAuthorization">Work Authorization</label>
+        <select id="workAuthorization" name="workAuthorization" required>
+            <option value="">Select an option</option>
+            <option value="US_CITIZEN">US Citizen</option>
+            <option value="GREEN_CARD">Green Card</option>
+            <option value="NEED_SPONSORSHIP">Need Sponsorship</option>
+        </select>
+
+        <span id="exp-label">Years of Experience</span>
+        <input type="number" id="experienceYears" name="experienceYears" aria-labelledby="exp-label">
+
+        <label for="portfolioUrl">Portfolio URL</label>
+        <input type="url" id="portfolioUrl" name="portfolioUrl">
+
+        <label><input type="checkbox" id="agreeTerms" name="agreeTerms" required> I agree to terms</label>
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
