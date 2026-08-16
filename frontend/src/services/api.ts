@@ -104,19 +104,29 @@ export const dashboardApi = {
   }
 };
 
+const defaultJobs = [
+  { id: 101, title: 'Lead Frontend Architect', company: 'Vite UI Corp', source: 'LINKEDIN', url: 'https://example.com/jobs/101', description: 'Build high performance React & TypeScript web applications with autonomous AI agents.', matchScore: 94 },
+  { id: 102, title: 'Senior Cloud Architect', company: 'Apex Systems', source: 'JOOBLE', url: 'https://example.com/jobs/102', description: 'Build cloud native Java microservices, Spring Boot, and Kubernetes infrastructure.', matchScore: 88 },
+  { id: 103, title: 'Staff Software Engineer', company: 'Google', source: 'INDEED', url: 'https://example.com/jobs/103', description: 'Design large-scale distributed databases and AI platforms.', matchScore: 91 },
+];
+
+const defaultApplications = [
+  { id: 1, jobTitle: 'Senior Cloud Architect', company: 'Apex Systems', status: 'INTERVIEW', submittedAt: new Date().toISOString() },
+  { id: 2, jobTitle: 'Lead Frontend Architect', company: 'Vite UI Corp', status: 'READY_FOR_REVIEW', submittedAt: null },
+  { id: 3, jobTitle: 'Staff Software Engineer', company: 'Google', status: 'APPLIED', submittedAt: new Date().toISOString() },
+];
+
 export const jobsApi = {
   getJobs: async () => {
     await ensureAuthenticated();
     try {
       const res = await apiClient.get('/jobs');
-      return res.data?.data || [];
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (list && list.length > 0) return list;
     } catch {
-      return [
-        { id: 101, title: 'Lead Frontend Architect', company: 'Vite UI Corp', source: 'LINKEDIN', url: 'https://example.com/jobs/101', description: 'Build high performance React & TypeScript web applications.', matchScore: 94 },
-        { id: 102, title: 'Senior Cloud Architect', company: 'Apex Systems', source: 'JOOBLE', url: 'https://example.com/jobs/102', description: 'Build cloud native Java microservices and Kubernetes infrastructure.', matchScore: 88 },
-        { id: 103, title: 'Staff Software Engineer', company: 'Google', source: 'INDEED', url: 'https://example.com/jobs/103', description: 'Design large-scale distributed databases and AI platforms.', matchScore: 91 },
-      ];
+      // Fallback to default jobs
     }
+    return defaultJobs;
   },
   triggerFetch: async () => {
     await ensureAuthenticated();
@@ -130,14 +140,12 @@ export const applicationsApi = {
     await ensureAuthenticated();
     try {
       const res = await apiClient.get('/applications');
-      return res.data?.data || [];
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (list && list.length > 0) return list;
     } catch {
-      return [
-        { id: 1, jobTitle: 'Senior Cloud Architect', company: 'Apex Systems', status: 'INTERVIEW', submittedAt: new Date().toISOString() },
-        { id: 2, jobTitle: 'Lead Frontend Architect', company: 'Vite UI Corp', status: 'READY_FOR_REVIEW', submittedAt: null },
-        { id: 3, jobTitle: 'Staff Software Engineer', company: 'Google', status: 'APPLIED', submittedAt: new Date().toISOString() },
-      ];
+      // Fallback to default applications
     }
+    return defaultApplications;
   },
   createApplication: async (jobId: number) => {
     await ensureAuthenticated();
@@ -161,18 +169,30 @@ export const applicationsApi = {
   }
 };
 
+const defaultEmails = [
+  { id: 1, sender: 'recruiter@apexsystems.com', senderDomain: 'apexsystems.com', subject: 'Invitation to Interview for Senior Cloud Architect', classification: 'INTERVIEW_INVITATION', classificationConfidence: 0.95, receivedAt: new Date().toISOString() },
+  { id: 2, sender: 'no-reply@techcorp.com', senderDomain: 'techcorp.com', subject: 'Application Received', classification: 'APPLICATION_CONFIRMATION', classificationConfidence: 0.92, receivedAt: new Date().toISOString() },
+];
+
+const defaultFollowUps = [
+  { id: 1, applicationId: 3, sequenceNumber: 1, status: 'SCHEDULED', scheduledAt: new Date(Date.now() + 86400000 * 2).toISOString(), followUpSubject: 'Following Up: Application for Staff Software Engineer at Google' }
+];
+
+const defaultInterviews = [
+  { id: 1, applicationId: 1, companyName: 'Apex Systems', jobTitle: 'Senior Cloud Architect', interviewType: 'TECHNICAL', scheduledAt: new Date(Date.now() + 86400000 * 3).toISOString(), status: 'SCHEDULED', meetingUrl: 'https://zoom.us/j/999888777' }
+];
+
 export const emailApi = {
   getEmails: async () => {
     await ensureAuthenticated();
     try {
       const res = await apiClient.get('/email-intelligence');
-      return res.data?.data || [];
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (list && list.length > 0) return list;
     } catch {
-      return [
-        { id: 1, sender: 'recruiter@apexsystems.com', senderDomain: 'apexsystems.com', subject: 'Invitation to Interview for Senior Cloud Architect', classification: 'INTERVIEW_INVITATION', classificationConfidence: 0.95, receivedAt: new Date().toISOString() },
-        { id: 2, sender: 'no-reply@techcorp.com', senderDomain: 'techcorp.com', subject: 'Application Received', classification: 'APPLICATION_CONFIRMATION', classificationConfidence: 0.92, receivedAt: new Date().toISOString() },
-      ];
+      // Fallback
     }
+    return defaultEmails;
   },
   simulateEmail: async (data: { sender: string; subject: string; bodySnippet: string; externalThreadId?: string }) => {
     await ensureAuthenticated();
@@ -186,12 +206,12 @@ export const followUpApi = {
     await ensureAuthenticated();
     try {
       const res = await apiClient.get('/follow-ups');
-      return res.data?.data || [];
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (list && list.length > 0) return list;
     } catch {
-      return [
-        { id: 1, applicationId: 3, sequenceNumber: 1, status: 'SCHEDULED', scheduledAt: new Date(Date.now() + 86400000 * 2).toISOString(), followUpSubject: 'Following Up: Application for Staff Software Engineer at Google' }
-      ];
+      // Fallback
     }
+    return defaultFollowUps;
   },
   generateDraft: async (appId: number, sequenceNumber = 1, customNotes?: string) => {
     await ensureAuthenticated();
@@ -220,12 +240,12 @@ export const interviewApi = {
     await ensureAuthenticated();
     try {
       const res = await apiClient.get('/interviews');
-      return res.data?.data || [];
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (list && list.length > 0) return list;
     } catch {
-      return [
-        { id: 1, applicationId: 1, companyName: 'Apex Systems', jobTitle: 'Senior Cloud Architect', interviewType: 'TECHNICAL', scheduledAt: new Date(Date.now() + 86400000 * 3).toISOString(), status: 'SCHEDULED', meetingUrl: 'https://zoom.us/j/999888777' }
-      ];
+      // Fallback
     }
+    return defaultInterviews;
   },
   getPrep: async (interviewId: number) => {
     await ensureAuthenticated();
