@@ -26,3 +26,11 @@ Thumbs.db
 .env
 *.pem
 *.key
+
+# Frontend
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.vite/
+**/.vite/
