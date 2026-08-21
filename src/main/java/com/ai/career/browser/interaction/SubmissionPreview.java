@@ -18,11 +18,22 @@ public class SubmissionPreview {
     private String formId;
     private boolean submitControlDetected;
 
+    @Builder.Default
+    private String executionMode = "SANDBOX";
+
+    @Builder.Default
+    private boolean submissionAttempted = false;
+
     /**
      * Always false for M6-B safe dry-runs.
      */
     @Builder.Default
     private boolean readyForSubmission = false;
+
+    private int fieldsDetected;
+    private int fieldsMapped;
+    private int fieldsRequireReview;
+    private int fieldsUnsupported;
 
     @Builder.Default
     private Map<String, String> filledFields = Map.of();

@@ -16,6 +16,8 @@ import com.ai.career.execution.provider.ExecutionResult;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.ai.career.execution.lock.DistributedExecutionLock;
+import com.ai.career.integration.service.IntegrationAuditService;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 
@@ -105,17 +107,24 @@ class GenericFormApplicationProviderTest {
         FinalSubmissionGate gate = new FinalSubmissionGate();
 
         applicationRepository = Mockito.mock(ApplicationRepository.class);
+        com.ai.career.domain.entity.User dummyUser = com.ai.career.domain.entity.User.builder().id(1L).email("test@example.com").build();
         Job job = Job.builder().url("http://127.0.0.1:" + port + "/").build();
-        Application app = Application.builder().id(200L).job(job).providerName("GENERIC_JOB_FORM").status(ApplicationState.APPROVED).build();
+        Application app = Application.builder().id(200L).user(dummyUser).job(job).providerName("GENERIC_JOB_FORM").status(ApplicationState.APPROVED).build();
 
         Mockito.when(applicationRepository.findById(200L)).thenReturn(Optional.of(app));
+
+        DistributedExecutionLock lock = Mockito.mock(DistributedExecutionLock.class);
+        Mockito.when(lock.acquire(Mockito.anyString(), Mockito.anyString(), Mockito.anyLong())).thenReturn(true);
+        IntegrationAuditService auditService = Mockito.mock(IntegrationAuditService.class);
 
         BrowserInteractionService interactionService = new BrowserInteractionService(
                 applicationRepository,
                 validator,
                 factory,
                 discoveryService,
-                interactor
+                interactor,
+                lock,
+                auditService
         );
 
         provider = new GenericFormApplicationProvider(

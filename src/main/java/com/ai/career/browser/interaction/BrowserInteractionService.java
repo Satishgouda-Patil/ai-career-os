@@ -7,10 +7,13 @@ import com.ai.career.browser.core.BrowserSession;
 import com.ai.career.browser.core.BrowserSessionFactory;
 import com.ai.career.browser.discovery.*;
 import com.ai.career.browser.security.BrowserUrlValidator;
+import com.ai.career.execution.lock.DistributedExecutionLock;
 import com.ai.career.form.model.FieldType;
+import com.ai.career.integration.service.IntegrationAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -24,7 +27,10 @@ public class BrowserInteractionService {
     private final BrowserSessionFactory sessionFactory;
     private final BrowserFormDiscoveryService discoveryService;
     private final BrowserFormInteractor interactor;
+    private final DistributedExecutionLock distributedExecutionLock;
+    private final IntegrationAuditService auditService;
 
+    @Transactional(readOnly = true)
     public BrowserInteractionPlan prepareInteractionPlan(Long applicationId) {
         Application application = getValidApplication(applicationId);
         String jobUrl = application.getJob().getUrl();
@@ -118,10 +124,26 @@ public class BrowserInteractionService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public SubmissionPreview executeInteraction(Long applicationId) {
         Application application = getValidApplication(applicationId);
         String jobUrl = application.getJob().getUrl();
         urlValidator.validateUrl(jobUrl);
+
+        // Concurrency Lock
+        String lockKey = "application-browser-interaction:" + applicationId;
+        if (!distributedExecutionLock.acquire(lockKey, "LOCK_SANDBOX_INTERACTION", 300)) {
+            log.warn("Failed to acquire interaction lock for application ID: {}", applicationId);
+            recordAuditSafely(application.getUser().getId(), applicationId, "LOCK_NOT_ACQUIRED", "lockKey=" + lockKey);
+            return SubmissionPreview.builder()
+                    .applicationId(applicationId)
+                    .status("LOCK_NOT_ACQUIRED")
+                    .executionMode("SANDBOX")
+                    .submissionAttempted(false)
+                    .readyForSubmission(false)
+                    .warnings(List.of("Lock not acquired for sandbox interaction"))
+                    .build();
+        }
 
         BrowserInteractionPlan plan = prepareInteractionPlan(applicationId);
         Map<String, String> filledFields = new HashMap<>();
@@ -129,42 +151,71 @@ public class BrowserInteractionService {
         List<String> warnings = new ArrayList<>(plan.getWarnings());
         boolean submitControlDetected = false;
 
+        int fieldsDetected = plan.getActions().size();
+        int fieldsMapped = 0;
+        int fieldsRequireReview = plan.getReviewFields().size();
+        int fieldsUnsupported = plan.getUnresolvedFields().size();
+
         try (BrowserSession session = sessionFactory.createSession()) {
             session.navigate(jobUrl);
 
             BrowserPage page = session.getPage();
 
-            // Detect submit controls without interacting
+            // Detect submit controls without interacting or clicking
             List<BrowserPage.ElementHandle> submitButtons = page.querySelectorAll("button[type='submit'], input[type='submit'], button:has-text('Submit'), button:has-text('Apply')");
             if (!submitButtons.isEmpty()) {
                 submitControlDetected = true;
+                log.info("Submit control detected in DOM - Recorded without clicking.");
             }
 
             for (InteractionFieldAction action : plan.getActions()) {
                 if (action.getActionType() == InteractionActionType.FILL_TEXT) {
                     interactor.fillText(session, action.getSelector(), action.getValue());
-                    filledFields.put(action.getFieldName(), action.getValue());
+                    filledFields.put(action.getFieldName() != null ? action.getFieldName() : action.getSelector(), action.getValue());
+                    fieldsMapped++;
                 } else if (action.getActionType() == InteractionActionType.SELECT_OPTION) {
                     interactor.selectOption(session, action.getSelector(), action.getValue());
-                    filledFields.put(action.getFieldName(), action.getValue());
+                    filledFields.put(action.getFieldName() != null ? action.getFieldName() : action.getSelector(), action.getValue());
+                    fieldsMapped++;
                 } else if (action.getActionType() == InteractionActionType.CHECK) {
                     interactor.checkCheckbox(session, action.getSelector(), true);
-                    filledFields.put(action.getFieldName(), "true");
+                    filledFields.put(action.getFieldName() != null ? action.getFieldName() : action.getSelector(), "true");
+                    fieldsMapped++;
                 } else if (action.getActionType() == InteractionActionType.UPLOAD_FILE) {
                     uploadedFiles.add(action.getValue());
+                    fieldsMapped++;
                 }
             }
+
+            recordAuditSafely(application.getUser().getId(), applicationId, "SANDBOX_INTERACTION_VERIFIED", "fieldsMapped=" + fieldsMapped);
 
             return SubmissionPreview.builder()
                     .applicationId(applicationId)
                     .formId(plan.getFormId())
+                    .executionMode("SANDBOX")
+                    .submissionAttempted(false)
                     .submitControlDetected(submitControlDetected)
                     .readyForSubmission(false) // ALWAYS false in M6-B
+                    .fieldsDetected(fieldsDetected)
+                    .fieldsMapped(fieldsMapped)
+                    .fieldsRequireReview(fieldsRequireReview)
+                    .fieldsUnsupported(fieldsUnsupported)
                     .filledFields(filledFields)
                     .uploadedFiles(uploadedFiles)
                     .unresolvedFields(plan.getUnresolvedFields())
                     .warnings(warnings)
-                    .status("CONTROLLED_INTERACTION_VERIFIED_STOPPED")
+                    .status("READY_FOR_REVIEW")
+                    .build();
+        } catch (Exception e) {
+            log.error("Error during sandbox browser interaction for app ID: {}", applicationId, e);
+            recordAuditSafely(application.getUser().getId(), applicationId, "SANDBOX_INTERACTION_FAILED", "error=" + e.getMessage());
+            return SubmissionPreview.builder()
+                    .applicationId(applicationId)
+                    .executionMode("SANDBOX")
+                    .submissionAttempted(false)
+                    .readyForSubmission(false)
+                    .status("INTERACTION_FAILED")
+                    .warnings(List.of("Interaction failed: " + e.getMessage()))
                     .build();
         }
     }
@@ -178,6 +229,14 @@ public class BrowserInteractionService {
         String combined = ((label != null ? label : "") + " " + (name != null ? name : "")).toLowerCase();
         return combined.contains("authorization") || combined.contains("visa") || combined.contains("sponsorship")
                 || combined.contains("disability") || combined.contains("veteran") || combined.contains("gender")
-                || combined.contains("race") || combined.contains("ethnicity") || combined.contains("salary");
+                || combined.contains("race") || combined.contains("ethnicity");
+    }
+
+    private void recordAuditSafely(Long userId, Long applicationId, String action, String summary) {
+        try {
+            auditService.recordAudit(userId, applicationId, "PLAYWRIGHT_SANDBOX_INTERACTION", action, "SUCCESS", summary, "sandbox=true", 100L, null);
+        } catch (Exception e) {
+            log.warn("Failed to record audit log cleanly for sandbox interaction", e);
+        }
     }
 }

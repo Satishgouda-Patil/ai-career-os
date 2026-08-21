@@ -10,6 +10,8 @@ import com.ai.career.domain.entity.Job;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.ai.career.execution.lock.DistributedExecutionLock;
+import com.ai.career.integration.service.IntegrationAuditService;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 
@@ -96,17 +98,24 @@ class BrowserInteractionServiceTest {
         BrowserFormInteractor interactor = new BrowserFormInteractor();
 
         applicationRepository = Mockito.mock(ApplicationRepository.class);
+        com.ai.career.domain.entity.User dummyUser = com.ai.career.domain.entity.User.builder().id(1L).email("test@example.com").build();
         Job job = Job.builder().url("http://127.0.0.1:" + port + "/").build();
-        Application app = Application.builder().id(100L).job(job).build();
+        Application app = Application.builder().id(100L).user(dummyUser).job(job).build();
 
         Mockito.when(applicationRepository.findById(100L)).thenReturn(Optional.of(app));
+
+        DistributedExecutionLock lock = Mockito.mock(DistributedExecutionLock.class);
+        Mockito.when(lock.acquire(Mockito.anyString(), Mockito.anyString(), Mockito.anyLong())).thenReturn(true);
+        IntegrationAuditService auditService = Mockito.mock(IntegrationAuditService.class);
 
         interactionService = new BrowserInteractionService(
                 applicationRepository,
                 validator,
                 factory,
                 discoveryService,
-                interactor
+                interactor,
+                lock,
+                auditService
         );
     }
 
