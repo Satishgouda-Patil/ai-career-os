@@ -56,6 +56,10 @@ app:
     auto-send-email: false
     auto-linkedin: false
     allow-live-submission: false
+  browser:
+    enabled: true
+    headless: true
+    allow-localhost: true
 
 management:
   endpoints:

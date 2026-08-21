@@ -38,6 +38,10 @@ app:
     access-key: minioadmin
     secret-key: minioadmin
     bucket-name: resumes
+  browser:
+    enabled: true
+    headless: true
+    allow-localhost: true
   telegram:
     bot-token: mock-bot-token
     chat-id: mock-chat-id
