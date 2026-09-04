@@ -36,6 +36,9 @@ public class ControlledApplicationExecutionTest {
     @Autowired
     private LiveSubmissionSafetyGate safetyGate;
 
+    @Autowired
+    private com.ai.career.domain.repository.JobRepository jobRepository;
+
     private User testUser;
     private Application testApplication;
 
@@ -46,7 +49,7 @@ public class ControlledApplicationExecutionTest {
                 .passwordHash("hashed")
                 .build());
 
-        Job testJob = Job.builder()
+        Job testJob = jobRepository.save(Job.builder()
                 .source("GREENHOUSE")
                 .sourceJobId("gh-m6f-99")
                 .title("Lead End-to-End Test Architect")
@@ -54,7 +57,7 @@ public class ControlledApplicationExecutionTest {
                 .location("Remote")
                 .description("Build controlled human-gated browser automation systems.")
                 .url("https://boards.greenhouse.io/safetyfirst/jobs/99")
-                .build();
+                .build());
 
         testApplication = applicationRepository.save(Application.builder()
                 .user(testUser)
