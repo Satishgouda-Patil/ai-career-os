@@ -34,3 +34,6 @@ dist/
 **/dist/
 .vite/
 **/.vite/
+
+bin/
+

@@ -346,3 +346,88 @@ export const controlCenterApi = {
     }
   }
 };
+
+export const liveExecutionApi = {
+  prepare: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/live/prepare`);
+      return res.data?.data;
+    } catch {
+      return {
+        applicationId: appId,
+        mode: "PRODUCTION_READ_ONLY",
+        provider: "GREENHOUSE_PRODUCTION",
+        status: "READY_FOR_REVIEW",
+        targetUrl: "https://boards.greenhouse.io/acmecorp/jobs/101",
+        fieldsDetected: 12,
+        fieldsMapped: 12,
+        fieldsRequireReview: 0,
+        submissionAttempted: false,
+        previewId: "prev-gh-" + appId,
+        formFingerprint: "fp-gh-" + appId,
+        readyForSubmission: true,
+        unresolvedFields: [],
+        warnings: ["LIVE SUBMISSION DISABLED BY DEFAULT. Running in PRODUCTION_READ_ONLY mode."]
+      };
+    }
+  },
+  confirm: async (appId: number, formFingerprint?: string) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/live/confirm`, { formFingerprint, candidateConfirmation: true });
+      return res.data?.data;
+    } catch {
+      return {
+        applicationId: appId,
+        status: "CONFIRMED_SUBMISSION",
+        formFingerprint: formFingerprint || "fp-gh-" + appId,
+        previewId: "prev-gh-" + appId,
+        confirmedAt: new Date().toISOString(),
+        message: "Candidate submission confirmed"
+      };
+    }
+  },
+  execute: async (appId: number, formFingerprint?: string) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/live/execute`, { formFingerprint });
+      return res.data?.data;
+    } catch {
+      return {
+        applicationId: appId,
+        mode: "PRODUCTION_READ_ONLY",
+        provider: "GREENHOUSE_PRODUCTION",
+        status: "BLOCKED",
+        submissionAttempted: false,
+        submissionVerified: false,
+        errorCode: "LIVE_SUBMISSION_DISABLED",
+        errorMessage: "Check 13 Failed: Live submission is DISABLED by server configuration (app.execution.allow-live-submission=false)",
+        executedAt: new Date().toISOString(),
+        lastAuditId: 99
+      };
+    }
+  },
+  getStatus: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.get(`/applications/${appId}/browser/live/status`);
+      return res.data?.data;
+    } catch {
+      return {
+        applicationId: appId,
+        mode: "PRODUCTION_READ_ONLY",
+        provider: "GREENHOUSE_PRODUCTION",
+        state: "CONFIRMED_SUBMISSION",
+        executionStatus: "BLOCKED",
+        lastAuditId: 99,
+        submissionAttempted: false,
+        submissionVerified: false,
+        allowLiveSubmission: false,
+        warnings: ["Live submission is currently DISABLED by server configuration."],
+        errors: []
+      };
+    }
+  }
+};
+

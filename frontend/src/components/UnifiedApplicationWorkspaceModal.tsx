@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, CheckCircle2, Play, AlertTriangle, Shield, Layers, FileText, UserCheck, Lock } from 'lucide-react';
+import { Sparkles, CheckCircle2, Play, AlertTriangle, Shield, Layers, FileText, UserCheck, Lock, Globe } from 'lucide-react';
 import { applicationsApi } from '../services/api';
+import { LiveSubmissionPanel } from './LiveSubmissionPanel';
 
 interface UnifiedWorkspaceModalProps {
   applicationId: number;
@@ -14,7 +15,7 @@ export const UnifiedApplicationWorkspaceModal: React.FC<UnifiedWorkspaceModalPro
   onRefresh,
 }) => {
   const [workspace, setWorkspace] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'job' | 'artifacts' | 'readiness' | 'audit'>('job');
+  const [activeTab, setActiveTab] = useState<'job' | 'artifacts' | 'readiness' | 'live' | 'audit'>('job');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -94,6 +95,12 @@ export const UnifiedApplicationWorkspaceModal: React.FC<UnifiedWorkspaceModalPro
             <CheckCircle2 className="w-3.5 h-3.5" /> Form Readiness Checklist
           </button>
           <button
+            onClick={() => setActiveTab('live')}
+            className={`pb-2 border-b-2 transition flex items-center gap-1.5 ${activeTab === 'live' ? 'border-amber-500 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+          >
+            <Globe className="w-3.5 h-3.5" /> Greenhouse Controlled ATS
+          </button>
+          <button
             onClick={() => setActiveTab('audit')}
             className={`pb-2 border-b-2 transition flex items-center gap-1.5 ${activeTab === 'audit' ? 'border-sky-500 text-sky-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
           >
@@ -148,7 +155,12 @@ export const UnifiedApplicationWorkspaceModal: React.FC<UnifiedWorkspaceModalPro
           </div>
         )}
 
-        {/* Tab 4: Audit Log */}
+        {/* Tab 4: Greenhouse Live Controlled Execution */}
+        {activeTab === 'live' && (
+          <LiveSubmissionPanel applicationId={applicationId} onRefresh={onRefresh} />
+        )}
+
+        {/* Tab 5: Audit Log */}
         {activeTab === 'audit' && (
           <div className="space-y-4 text-xs">
             <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-2">
@@ -160,6 +172,7 @@ export const UnifiedApplicationWorkspaceModal: React.FC<UnifiedWorkspaceModalPro
             </div>
           </div>
         )}
+
 
         {/* Safety Locks Panel & Footer Actions */}
         <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-800 flex items-center justify-between">
