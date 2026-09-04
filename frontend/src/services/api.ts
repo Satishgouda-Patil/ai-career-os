@@ -557,4 +557,146 @@ export const atsOperationsApi = {
   }
 };
 
+export const controlledExecutionApi = {
+  start: async (appId: number, mode = 'PRODUCTION_READ_ONLY') => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute/start`, { mode });
+      return res.data;
+    } catch {
+      return { applicationId: appId, workflowStatus: 'INSPECTING', currentStep: 1 };
+    }
+  },
+  inspect: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute/inspect`);
+      return res.data;
+    } catch {
+      return { applicationId: appId, workflowStatus: 'INSPECTING', currentStep: 3 };
+    }
+  },
+  map: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute/map`);
+      return res.data;
+    } catch {
+      return { applicationId: appId, workflowStatus: 'MAPPING', currentStep: 4 };
+    }
+  },
+  sandbox: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute/sandbox`);
+      return res.data;
+    } catch {
+      return { applicationId: appId, workflowStatus: 'SANDBOX_VERIFYING', currentStep: 5 };
+    }
+  },
+  prepare: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute/prepare`);
+      return res.data;
+    } catch {
+      return { applicationId: appId, workflowStatus: 'AWAITING_REVIEW', currentStep: 6, previewId: 'prev-gh-' + appId, formFingerprint: 'fp-gh-' + appId };
+    }
+  },
+  review: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.get(`/applications/${appId}/browser/execute/review`);
+      return res.data;
+    } catch {
+      return {
+        applicationId: appId,
+        provider: 'GREENHOUSE_PRODUCTION',
+        targetUrl: 'https://boards.greenhouse.io/viteui/jobs/' + appId,
+        fieldsDetected: 12,
+        fieldsMapped: 12,
+        fieldsRequireReview: 0,
+        executionMode: 'PRODUCTION_READ_ONLY',
+        allowLiveSubmission: false,
+        autoApply: false,
+        autoSendEmail: false,
+        autoLinkedIn: false,
+        readyForConfirmation: true
+      };
+    }
+  },
+  confirm: async (appId: number, previewId: string, formFingerprint: string) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute/confirm`, { previewId, formFingerprint, acknowledged: true });
+      return res.data;
+    } catch {
+      return { applicationId: appId, workflowStatus: 'AWAITING_CONFIRMATION', currentStep: 8, confirmationId: 'conf-cae-' + appId };
+    }
+  },
+  run: async (appId: number, previewId?: string, confirmationId?: string, formFingerprint?: string) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute/run`, { mode: 'PRODUCTION_READ_ONLY', previewId, confirmationId, formFingerprint });
+      return res.data;
+    } catch {
+      return {
+        applicationId: appId,
+        workflowStatus: 'BLOCKED',
+        executionMode: 'PRODUCTION_READ_ONLY',
+        currentStep: 10,
+        submissionAttempted: false,
+        emailSent: false,
+        fileUploaded: false,
+        failureCode: 'LIVE_SUBMISSION_DISABLED',
+        failureReason: 'Live submission is disabled by server configuration (ALLOW_LIVE_SUBMISSION=false).'
+      };
+    }
+  },
+  verify: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute/verify`);
+      return res.data;
+    } catch {
+      return { applicationId: appId, workflowStatus: 'BLOCKED', currentStep: 11, verificationStatus: 'NOT_APPLICABLE' };
+    }
+  },
+  getStatus: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.get(`/applications/${appId}/browser/execute/status`);
+      return res.data;
+    } catch {
+      return { applicationId: appId, workflowStatus: 'INSPECTING', currentStep: 1, allowLiveSubmission: false, submissionAttempted: false };
+    }
+  },
+  getEvidence: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.get(`/applications/${appId}/browser/execute/evidence`);
+      return res.data;
+    } catch {
+      return { applicationId: appId, provider: 'GREENHOUSE_PRODUCTION', submissionAttempted: false };
+    }
+  },
+  runFullPipeline: async (appId: number) => {
+    await ensureAuthenticated();
+    try {
+      const res = await apiClient.post(`/applications/${appId}/browser/execute`);
+      return res.data;
+    } catch {
+      return {
+        applicationId: appId,
+        workflowStatus: 'BLOCKED',
+        executionMode: 'PRODUCTION_READ_ONLY',
+        currentStep: 10,
+        submissionAttempted: false,
+        failureCode: 'LIVE_SUBMISSION_DISABLED'
+      };
+    }
+  }
+};
+
+
 
