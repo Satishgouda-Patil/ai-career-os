@@ -8,9 +8,10 @@ import {
   Video,
   Activity,
   Settings,
+  Cpu,
 } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'jobs' | 'applications' | 'emails' | 'followups' | 'interviews' | 'control-center' | 'settings';
+export type NavTab = 'dashboard' | 'jobs' | 'applications' | 'emails' | 'followups' | 'interviews' | 'control-center' | 'ats-operations' | 'settings';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -53,8 +54,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30'
     },
     { id: 'control-center' as NavTab, label: 'Control Center', icon: Activity },
+    { id: 'ats-operations' as NavTab, label: 'ATS Operations', icon: Cpu },
     { id: 'settings' as NavTab, label: 'Settings & Safety', icon: Settings },
   ];
+
 
   return (
     <aside className="w-64 fixed left-0 top-16 bottom-0 border-r border-slate-800 bg-slate-900/60 p-4 flex flex-col justify-between">
